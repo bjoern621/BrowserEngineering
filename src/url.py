@@ -5,7 +5,15 @@ class URL:
     def __init__(self, url: str):
         self.scheme, url = url.split("://", 1)
 
-        assert self.scheme == "http", "Only HTTP scheme is supported"
+        assert self.scheme in (
+            "http",
+            "https",
+        ), "Only HTTP and HTTPS schemes are supported"
+
+        if self.scheme == "http":
+            self.port = 80
+        elif self.scheme == "https":
+            self.port = 443
 
         if "/" not in url:
             url += "/"
@@ -13,12 +21,22 @@ class URL:
         self.host, url = url.split("/", 1)
         self.path = "/" + url
 
+        if ":" in self.host:
+            self.host, port = self.host.split(":", 1)
+            self.port = int(port)
+
     def request(self) -> str:
         # Request
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
 
-        s.connect((self.host, 80))
+        s.connect((self.host, self.port))
+
+        if self.scheme == "https":
+            import ssl
+
+            ctx = ssl.create_default_context()
+            s = ctx.wrap_socket(s, server_hostname=self.host)
 
         request = f"GET {self.path} HTTP/1.0\r\n"
         request += f"Host: {self.host}\r\n"
