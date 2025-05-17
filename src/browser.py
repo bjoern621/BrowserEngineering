@@ -84,6 +84,10 @@ class Browser:
 
         assert self.text is not None, "Text content is not loaded yet"
 
+        if self.width != width:
+            # Re-layout the text if the width has changed
+            self.display_list = layout(self.text, width)
+
         self.width = width
         self.height = height
 
