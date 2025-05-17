@@ -68,11 +68,16 @@ class Browser:
 def layout(text: str):
     """Layout the text for display on the canvas. It returns a display list of tuples with x, y coordinates and the character. The coordinates are page coordinates."""
 
-    display_list: List[Tuple[int, int, str]] = []
+    display_list: List[Tuple[float, float, str]] = []
 
     cursor_x, cursor_y = HSTEP, VSTEP
 
     for char in text:
+        if char == "\n":
+            cursor_x = HSTEP
+            cursor_y += VSTEP * 1.35
+            continue
+
         display_list.append((cursor_x, cursor_y, char))
         cursor_x += HSTEP
 
