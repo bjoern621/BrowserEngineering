@@ -20,6 +20,10 @@ class Browser:
         self.scroll = 0
         self.window.bind("<Up>", lambda e: self.scroll_up())
         self.window.bind("<Down>", lambda e: self.scroll_down())
+        self.window.bind(
+            "<MouseWheel>",
+            lambda e: self.handle_mouse_wheel(e.delta),
+        )
 
     def load(self, url: URL):
         """Load the URL and display its content in the browser."""
@@ -43,13 +47,22 @@ class Browser:
 
             self.canvas.create_text(x, y - self.scroll, text=char)
 
-    def scroll_up(self):
-        self.scroll -= SCROLL_STEP
+    def scroll_up(self, scroll_step: int = SCROLL_STEP):
+        self.scroll -= scroll_step
+        self.scroll = max(self.scroll, 0)  # Prevent scrolling above the top
         self.draw()
 
-    def scroll_down(self):
-        self.scroll += SCROLL_STEP
+    def scroll_down(self, scroll_step: int = SCROLL_STEP):
+        self.scroll += scroll_step
         self.draw()
+
+    def handle_mouse_wheel(self, delta: int):
+        """Handle mouse wheel scrolling. Supports Windows."""
+
+        if delta > 0:
+            self.scroll_up(delta)
+        else:
+            self.scroll_down(abs(delta))
 
 
 def layout(text: str):
