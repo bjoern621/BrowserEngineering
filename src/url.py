@@ -26,6 +26,10 @@ class URL:
             self.port = int(port)
 
     def request(self) -> str:
+        """
+        Sends a GET request with the specified URL and returns the response body (content without first line or headers).
+        """
+
         # Request
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)

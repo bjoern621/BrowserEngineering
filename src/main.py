@@ -1,4 +1,6 @@
 import sys
+import tkinter
+from browser import Browser
 from url import URL
 
 
@@ -7,23 +9,9 @@ def main():
 
     url = sys.argv[1] if len(sys.argv) > 1 else "http://example.com/"
 
-    load(URL(url))
+    Browser().load(URL(url))
 
-
-def show(body: str):
-    in_tag = False
-    for char in body:
-        if char == "<":
-            in_tag = True
-        elif char == ">":
-            in_tag = False
-        elif not in_tag:
-            print(char, end="")
-
-
-def load(url: URL):
-    body: str = url.request()
-    show(body)
+    tkinter.mainloop()
 
 
 if __name__ == "__main__":
