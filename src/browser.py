@@ -62,6 +62,10 @@ class Browser:
 
     def scroll_down(self, scroll_step: int = SCROLL_STEP):
         self.scroll += scroll_step
+        max_y = max(
+            self.display_list[-1][1] if self.display_list else 0 - self.height, 0
+        )  # Calculate maximum scrolling that still allows for viewing content
+        self.scroll = min(self.scroll, max_y)
         self.draw()
 
     def handle_mouse_wheel(self, delta: int):
