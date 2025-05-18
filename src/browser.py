@@ -93,7 +93,7 @@ class Browser:
         """Handle window resize events. Re-layout and redraw the content."""
 
         if self.width == width and self.height == height:
-            return  # No need to re-layout if the size hasn't changed e.g. e.g. when the windows is dragged.
+            return  # No need to re-layout if the size hasn't changed e.g., when the windows is dragged.
 
         assert self.text is not None, "Text content is not loaded yet"
 
