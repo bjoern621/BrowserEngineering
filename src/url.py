@@ -8,7 +8,14 @@ class URL:
         assert self.scheme in (
             "http",
             "https",
-        ), "Only HTTP and HTTPS schemes are supported"
+            "file",
+        ), "Only HTTP, HTTPS and FILE schemes are supported"
+
+        if self.scheme == "file":
+            self.host = ""
+            self.path = url
+
+            return
 
         if self.scheme == "http":
             self.port = 80
@@ -27,8 +34,14 @@ class URL:
 
     def request(self) -> str:
         """
-        Sends a GET request with the specified URL and returns the response body (content without first line or headers).
+        Sends a GET request for http/https URLs or reads a local file for file URLs.
+        Returns the content as a string. For http/https URLs, the content is the response body (without headers).
         """
+
+        if self.scheme == "file":
+            # Read local file
+            with open(self.path, "r", encoding="utf-8") as file:
+                return file.read()
 
         # Request
 
