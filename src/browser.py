@@ -1,12 +1,16 @@
 import tkinter
-from typing import List, Tuple
+import tkinter.font
+from typing import List
 
+from constants import VSTEP
+from layout import Layout
+from tag import Tag
+from text import Text
 from url import URL
 
 INITIAL_WIDTH = 800
 INITIAL_HEIGHT = 600
 
-HSTEP, VSTEP = 13, 18
 
 SCROLL_STEP = 100
 
@@ -14,9 +18,16 @@ SCROLL_STEP = 100
 class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
+
+        bi_times = tkinter.font.Font(
+            family="Times", size=16, weight="normal", slant="roman"
+        )
+        self.font = bi_times
+
         self.canvas = tkinter.Canvas(
             self.window, width=INITIAL_WIDTH, height=INITIAL_HEIGHT
         )
+        self.window.minsize(400, 250)
         self.canvas.pack(
             fill=tkinter.BOTH, expand=True
         )  # The pack() method is used to add the canvas widget to the window's layout.
@@ -38,7 +49,7 @@ class Browser:
 
         body = url.request()
         self.text = lex(body)
-        self.display_list = layout(self.text, INITIAL_WIDTH)
+        self.display_list = Layout(self.text, INITIAL_WIDTH).display_list
         self.draw()
 
     def draw(self):
@@ -46,14 +57,16 @@ class Browser:
 
         self.canvas.delete("all")
 
-        for x, y, char in self.display_list:
+        for x, y, char, font in self.display_list:
             # Skip characters that are not in the current view
             if y > self.scroll + self.height:
                 continue
             if y + VSTEP < self.scroll:
                 continue
 
-            self.canvas.create_text(x, y - self.scroll, text=char)
+            self.canvas.create_text(
+                x, y - self.scroll, text=char, anchor="nw", font=font
+            )
 
     def scroll_up(self, scroll_step: int = SCROLL_STEP):
         self.scroll -= scroll_step
@@ -86,50 +99,35 @@ class Browser:
 
         if self.width != width:
             # Re-layout the text if the width has changed
-            self.display_list = layout(self.text, width)
+            self.display_list = Layout(self.text, width).display_list
 
         self.width = width
         self.height = height
 
-        self.display_list = layout(self.text, width)
         self.draw()
 
 
-def layout(text: str, width: int):
-    """Layout the text for display on the canvas. It returns a display list of tuples with x, y coordinates and the character. The coordinates are page coordinates."""
-
-    display_list: List[Tuple[float, float, str]] = []
-
-    cursor_x, cursor_y = HSTEP, VSTEP
-
-    for char in text:
-        if char == "\n":
-            cursor_x = HSTEP
-            cursor_y += VSTEP * 1.35
-            continue
-
-        display_list.append((cursor_x, cursor_y, char))
-        cursor_x += HSTEP
-
-        if cursor_x > width - HSTEP:
-            cursor_x = HSTEP
-            cursor_y += VSTEP
-
-    return display_list
-
-
-def lex(body: str) -> str:
+def lex(body: str) -> List[Text | Tag]:
     """Lexical analysis of the HTML body to extract text content."""
 
-    text = ""
-
+    tokens: List[Text | Tag] = []
+    buffer = ""
     in_tag = False
+
     for char in body:
         if char == "<":
             in_tag = True
+            if buffer:
+                tokens.append(Text(buffer))  # Stores the text content before the tag
+            buffer = ""
         elif char == ">":
             in_tag = False
-        elif not in_tag:
-            text += char
+            tokens.append(Tag(buffer))
+            buffer = ""
+        else:
+            buffer += char
 
-    return text
+    if not in_tag and buffer:
+        tokens.append(Text(buffer))  # Stores the text content after the last tag
+
+    return tokens

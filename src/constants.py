@@ -1,0 +1,1 @@
+HSTEP, VSTEP = 13, 18
