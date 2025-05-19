@@ -1,4 +1,4 @@
-from node import Node
+from nodes.node import Node
 
 
 class Text(Node):

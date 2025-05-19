@@ -1,11 +1,11 @@
 from tkinter.font import Font
 from typing import List, Tuple, Literal
 
-from constants import HSTEP, VSTEP
-from font_cache import get_font
-from element import Element
-from node import Node
-from text import Text
+from common.constants import HSTEP, VSTEP
+from common.font_cache import get_font
+from nodes.element import Element
+from nodes.node import Node
+from nodes.text import Text
 
 FONTS = {}
 

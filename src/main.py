@@ -2,7 +2,7 @@ import sys
 import tkinter
 import os
 from browser import Browser
-from url import URL
+from common.url import URL
 
 
 def main():

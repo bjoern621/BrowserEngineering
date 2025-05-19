@@ -1,7 +1,7 @@
 from typing import List
-from element import Element
-from node import Node
-from text import Text
+from nodes.element import Element
+from nodes.node import Node
+from nodes.text import Text
 
 SELF_CLOSING_TAGS = [
     "area",

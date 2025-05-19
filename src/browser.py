@@ -1,10 +1,10 @@
 import tkinter
 import tkinter.font
 
-from constants import VSTEP
-from layout import Layout
-from parser import HTMLParser
-from url import URL
+from common.constants import VSTEP
+from layout.layout import Layout
+from parser.parser import HTMLParser
+from common.url import URL
 
 INITIAL_WIDTH = 800
 INITIAL_HEIGHT = 600
