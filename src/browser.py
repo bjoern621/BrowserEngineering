@@ -1,11 +1,9 @@
 import tkinter
 import tkinter.font
-from typing import List
 
 from constants import VSTEP
 from layout import Layout
-from tag import Tag
-from text import Text
+from parser import HTMLParser
 from url import URL
 
 INITIAL_WIDTH = 800
@@ -48,8 +46,8 @@ class Browser:
         """Load the URL and display its content in the browser."""
 
         body = url.request()
-        self.text = lex(body)
-        self.display_list = Layout(self.text, INITIAL_WIDTH).display_list
+        self.root_node = HTMLParser(body).parse()
+        self.display_list = Layout(self.root_node, INITIAL_WIDTH).display_list
         self.draw()
 
     def draw(self):
@@ -95,39 +93,13 @@ class Browser:
         if self.width == width and self.height == height:
             return  # No need to re-layout if the size hasn't changed e.g., when the windows is dragged.
 
-        assert self.text is not None, "Text content is not loaded yet"
+        assert self.root_node is not None, "Root node is None."
 
         if self.width != width:
             # Re-layout the text if the width has changed
-            self.display_list = Layout(self.text, width).display_list
+            self.display_list = Layout(self.root_node, width).display_list
 
         self.width = width
         self.height = height
 
         self.draw()
-
-
-def lex(body: str) -> List[Text | Tag]:
-    """Lexical analysis of the HTML body to extract text content."""
-
-    tokens: List[Text | Tag] = []
-    buffer = ""
-    in_tag = False
-
-    for char in body:
-        if char == "<":
-            in_tag = True
-            if buffer:
-                tokens.append(Text(buffer))  # Stores the text content before the tag
-            buffer = ""
-        elif char == ">":
-            in_tag = False
-            tokens.append(Tag(buffer))
-            buffer = ""
-        else:
-            buffer += char
-
-    if not in_tag and buffer:
-        tokens.append(Text(buffer))  # Stores the text content after the last tag
-
-    return tokens
