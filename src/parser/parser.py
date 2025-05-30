@@ -1,5 +1,5 @@
 from typing import List
-from nodes.element import Element
+from nodes.dom_element import DOMElement
 from nodes.node import Node
 from nodes.text import Text
 
@@ -36,7 +36,7 @@ class HTMLParser:
 
     def __init__(self, html: str):
         self.html = html
-        self.unfinished: List[Element] = []
+        self.unfinished: List[DOMElement] = []
 
     def parse(self) -> Node:
         """Lexical and structural analysis of the HTML body. Returns the root HTML Node (most often <html>) which represents the DOM tree root."""
@@ -81,7 +81,7 @@ class HTMLParser:
 
     def add_tag(self, tag: str):
         """
-        Process and add a tag to the DOM tree.
+        Process and add a tag (e.g., `"div"`, `"head"`, `"img src="img_girl.jpg" alt="Girl in a jacket""`, ...) to the DOM tree.
         This method handles different types of tags:
         - Ignores comment tags (starting with `!`)
         - Processes closing tags (starting with `/`)
@@ -115,14 +115,14 @@ class HTMLParser:
         elif tag_name in SELF_CLOSING_TAGS:
             # Add the self-closing tag to the parent node directly
             parent = self.unfinished[-1]
-            node = Element(tag_name, parent, attributes)
+            node = DOMElement(tag_name, parent, attributes)
             parent.children.append(node)
         else:
             # Adds the new node to the unfinished list
             parent = (
                 self.unfinished[-1] if self.unfinished else None
             )  # Very first open tag has no parent
-            node = Element(tag_name, parent, attributes)
+            node = DOMElement(tag_name, parent, attributes)
             self.unfinished.append(node)
 
     def finish(self) -> Node:
@@ -138,7 +138,11 @@ class HTMLParser:
         return self.unfinished.pop()
 
     def get_attributes(self, text: str) -> tuple[str, dict[str, str]]:
-        """Parses the attributes of an HTML tag formatted as string."""
+        """
+        Parses the attributes of an HTML tag. Returns the tag name and a dictionary of attributes.
+
+        Example: `"meta charset="utf-8""` returns `("meta", {"charset": "utf-8"})`.
+        """
 
         parts = text.split()
         tag_name = parts[0].casefold()

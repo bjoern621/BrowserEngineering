@@ -2,12 +2,16 @@ import tkinter
 import tkinter.font
 
 from common.constants import VSTEP
-from layout.layout import Layout
+from draw_commands.DrawInstruction import DrawInstruction
+from layout.document_layout import DocumentLayout
+from layout.layout_element import paint_tree
 from parser.parser import HTMLParser
 from common.url import URL
 
 INITIAL_WIDTH = 800
 INITIAL_HEIGHT = 600
+MIN_WIDTH = 400
+MIN_HEIGHT = 250
 
 
 SCROLL_STEP = 100
@@ -25,7 +29,7 @@ class Browser:
         self.canvas = tkinter.Canvas(
             self.window, width=INITIAL_WIDTH, height=INITIAL_HEIGHT
         )
-        self.window.minsize(400, 250)
+        self.window.minsize(MIN_WIDTH, MIN_HEIGHT)
         self.canvas.pack(
             fill=tkinter.BOTH, expand=True
         )  # The pack() method is used to add the canvas widget to the window's layout.
@@ -47,7 +51,14 @@ class Browser:
 
         body = url.request()
         self.root_node = HTMLParser(body).parse()
-        self.display_list = Layout(self.root_node, INITIAL_WIDTH).display_list
+
+        self.document = DocumentLayout(self.root_node, INITIAL_WIDTH)
+        self.document.layout()
+
+        self.display_list: list[DrawInstruction] = []
+        paint_tree(self.document, self.display_list)
+
+        # self.display_list = Layout(self.root_node, INITIAL_WIDTH).display_list
         self.draw()
 
     def draw(self):
@@ -55,16 +66,24 @@ class Browser:
 
         self.canvas.delete("all")
 
-        for x, y, char, font in self.display_list:
-            # Skip characters that are not in the current view
-            if y > self.scroll + self.height:
-                continue
-            if y + VSTEP < self.scroll:
+        for cmd in self.display_list:
+            if cmd.top > self.scroll + self.height:
                 continue
 
-            self.canvas.create_text(
-                x, y - self.scroll, text=char, anchor="nw", font=font
-            )
+            if cmd.bottom < self.scroll:
+                continue
+
+            cmd.execute(self.scroll, self.canvas)
+
+            # # Skip characters that are not in the current view
+            # if y > self.scroll + self.height:
+            #     continue
+            # if y + VSTEP < self.scroll:
+            #     continue
+
+            # self.canvas.create_text(
+            #     x, y - self.scroll, text=char, anchor="nw", font=font
+            # )
 
     def scroll_up(self, scroll_step: int = SCROLL_STEP):
         self.scroll -= scroll_step
@@ -74,7 +93,9 @@ class Browser:
     def scroll_down(self, scroll_step: int = SCROLL_STEP):
         self.scroll += scroll_step
         max_y = max(
-            self.display_list[-1][1] if self.display_list else 0 - self.height, 0
+            self.document.height + 2 * VSTEP - self.height,
+            0,
+            # self.display_list[-1].bottom - self.height, 0
         )  # Calculate maximum scrolling that still allows for viewing content
         self.scroll = min(self.scroll, max_y)
         self.draw()
@@ -97,7 +118,12 @@ class Browser:
 
         if self.width != width:
             # Re-layout the text if the width has changed
-            self.display_list = Layout(self.root_node, width).display_list
+            self.document = DocumentLayout(self.root_node, width)
+            self.document.layout()
+
+            self.display_list: list[DrawInstruction] = []
+            paint_tree(self.document, self.display_list)
+            # self.display_list = BlockLayout(self.root_node, width).display_list
 
         self.width = width
         self.height = height

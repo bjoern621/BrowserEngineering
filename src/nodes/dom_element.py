@@ -1,7 +1,7 @@
 from nodes.node import Node
 
 
-class Element(Node):
+class DOMElement(Node):
     """
     A class representing an HTML tag.
     A Tag object represents the contens of an HTML tag, which is a run of characters inside a tag.
