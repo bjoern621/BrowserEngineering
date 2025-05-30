@@ -1,5 +1,5 @@
 from typing import List
-from nodes.dom_element import DOMElement
+from nodes.tag_element import TAGElement
 from nodes.node import Node
 from nodes.text import Text
 
@@ -36,7 +36,7 @@ class HTMLParser:
 
     def __init__(self, html: str):
         self.html = html
-        self.unfinished: List[DOMElement] = []
+        self.unfinished: List[TAGElement] = []
 
     def parse(self) -> Node:
         """Lexical and structural analysis of the HTML body. Returns the root HTML Node (most often <html>) which represents the DOM tree root."""
@@ -115,14 +115,14 @@ class HTMLParser:
         elif tag_name in SELF_CLOSING_TAGS:
             # Add the self-closing tag to the parent node directly
             parent = self.unfinished[-1]
-            node = DOMElement(tag_name, parent, attributes)
+            node = TAGElement(tag_name, parent, attributes)
             parent.children.append(node)
         else:
             # Adds the new node to the unfinished list
             parent = (
                 self.unfinished[-1] if self.unfinished else None
             )  # Very first open tag has no parent
-            node = DOMElement(tag_name, parent, attributes)
+            node = TAGElement(tag_name, parent, attributes)
             self.unfinished.append(node)
 
     def finish(self) -> Node:

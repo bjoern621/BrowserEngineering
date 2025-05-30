@@ -7,7 +7,7 @@ from draw_commands.DrawRect import DrawRect
 from draw_commands.DrawText import DrawText
 from draw_commands.DrawInstruction import DrawInstruction
 from layout.layout_element import LayoutElement
-from nodes.dom_element import DOMElement
+from nodes.tag_element import TAGElement
 from nodes.node import Node
 from nodes.text import Text
 
@@ -73,7 +73,7 @@ class BlockLayout(LayoutElement):
     def paint(self) -> list[DrawInstruction]:
         cmds: list[DrawInstruction] = []
 
-        if isinstance(self.node, DOMElement) and self.node.tag_name == "pre":
+        if isinstance(self.node, TAGElement) and self.node.tag_name == "pre":
             x2, y2 = self.x + self.width, self.y + self.height
             rect = DrawRect(self.x, self.y, x2, y2, "gray")
             cmds.append(rect)
@@ -138,7 +138,7 @@ class BlockLayout(LayoutElement):
             return "inline"
         elif any(
             [
-                isinstance(child, DOMElement) and child.tag_name in BLOCK_ELEMENTS
+                isinstance(child, TAGElement) and child.tag_name in BLOCK_ELEMENTS
                 for child in self.node.children
             ]
         ):
@@ -195,7 +195,7 @@ class BlockLayout(LayoutElement):
         if isinstance(node, Text):
             for word in node.text.split():
                 self.word(word)
-        elif isinstance(node, DOMElement):
+        elif isinstance(node, TAGElement):
             self.open_tag(node.tag_name)
             for child in node.children:
                 self.recursive(child)
