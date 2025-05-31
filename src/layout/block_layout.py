@@ -8,10 +8,9 @@ from draw_commands.DrawText import DrawText
 from draw_commands.DrawInstruction import DrawInstruction
 from layout.layout_element import LayoutElement
 from nodes.tag_element import TAGElement
-from nodes.node import Node
+from nodes.html_element import HTMLElement
 from nodes.text import Text
 
-FONTS = {}
 BLOCK_ELEMENTS = [
     "html",
     "body",
@@ -58,7 +57,7 @@ class BlockLayout(LayoutElement):
 
     def __init__(
         self,
-        node: Node,
+        node: HTMLElement,
         width: float,
         parent: LayoutElement,
         previous_sibling: LayoutElement | None,
@@ -97,11 +96,7 @@ class BlockLayout(LayoutElement):
         mode = self.layout_mode()
 
         if mode == "block":
-            previous = None
-            for child in self.node.children:
-                next = BlockLayout(child, self.width, self, previous)
-                self.children.append(next)
-                previous = next
+            self.layout_intermediate()
         elif mode == "inline":
             self.cursor_x, self.cursor_y = 0, 0
             self.weight: Literal["normal", "bold"] = "normal"
@@ -127,6 +122,9 @@ class BlockLayout(LayoutElement):
             self.height: float = sum([child.height for child in self.children])
 
     def layout_intermediate(self):
+        """
+        Layout the block element as an intermediate block, which means it contains other block elements.
+        """
         previous = None
         for child in self.node.children:
             next = BlockLayout(child, self.width, self, previous)
@@ -134,6 +132,11 @@ class BlockLayout(LayoutElement):
             previous = next
 
     def layout_mode(self):
+        """
+        Determine the layout mode of this block.
+        Returns "inline" if this is a block layout laying out text inline (i.e., a text node potentially wrapping to multiple lines, <b>, <i>, etc.), or "block" if it is a block layout that contains other block elements (i.e. <p>, <h1>).
+
+        """
         if isinstance(self.node, Text):
             return "inline"
         elif any(
@@ -189,7 +192,7 @@ class BlockLayout(LayoutElement):
                 # Skip unknown tags for layout
                 _ = None
 
-    def recursive(self, node: Node):
+    def recursive(self, node: HTMLElement):
         """Recursively processes the (root) node and its children for layout."""
 
         if isinstance(node, Text):

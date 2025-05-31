@@ -5,7 +5,7 @@ from common.constants import VSTEP
 from draw_commands.DrawInstruction import DrawInstruction
 from layout.document_layout import DocumentLayout
 from layout.layout_element import paint_tree
-from parser.parser import HTMLParser
+from parser.parser import HTMLParser, print_tree
 from common.url import URL
 
 INITIAL_WIDTH = 800
@@ -46,11 +46,17 @@ class Browser:
         self.width = INITIAL_WIDTH
         self.height = INITIAL_HEIGHT
 
+        self.display_list: list[
+            DrawInstruction
+        ]  # A list of draw commands to be executed on the canvas in order.
+
     def load(self, url: URL):
         """Load the URL and display its content in the browser."""
 
         body = url.request()
         self.root_node = HTMLParser(body).parse()
+
+        print_tree(self.root_node)
 
         self.document = DocumentLayout(self.root_node, INITIAL_WIDTH)
         self.document.layout()
@@ -58,7 +64,6 @@ class Browser:
         self.display_list: list[DrawInstruction] = []
         paint_tree(self.document, self.display_list)
 
-        # self.display_list = Layout(self.root_node, INITIAL_WIDTH).display_list
         self.draw()
 
     def draw(self):
@@ -67,6 +72,7 @@ class Browser:
         self.canvas.delete("all")
 
         for cmd in self.display_list:
+            # Skip draw commmands that are not in the current view
             if cmd.top > self.scroll + self.height:
                 continue
 
@@ -74,16 +80,6 @@ class Browser:
                 continue
 
             cmd.execute(self.scroll, self.canvas)
-
-            # # Skip characters that are not in the current view
-            # if y > self.scroll + self.height:
-            #     continue
-            # if y + VSTEP < self.scroll:
-            #     continue
-
-            # self.canvas.create_text(
-            #     x, y - self.scroll, text=char, anchor="nw", font=font
-            # )
 
     def scroll_up(self, scroll_step: int = SCROLL_STEP):
         self.scroll -= scroll_step

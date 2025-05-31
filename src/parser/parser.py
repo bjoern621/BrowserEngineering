@@ -1,6 +1,6 @@
 from typing import List
 from nodes.tag_element import TAGElement
-from nodes.node import Node
+from nodes.html_element import HTMLElement
 from nodes.text import Text
 
 SELF_CLOSING_TAGS = [
@@ -38,7 +38,7 @@ class HTMLParser:
         self.html = html
         self.unfinished: List[TAGElement] = []
 
-    def parse(self) -> Node:
+    def parse(self) -> HTMLElement:
         """Lexical and structural analysis of the HTML body. Returns the root HTML Node (most often <html>) which represents the DOM tree root."""
 
         buffer = ""
@@ -125,7 +125,7 @@ class HTMLParser:
             node = TAGElement(tag_name, parent, attributes)
             self.unfinished.append(node)
 
-    def finish(self) -> Node:
+    def finish(self) -> HTMLElement:
         """Finishes the parsing process by closing any remaining tags in the unfinished list and returning the root node."""
 
         if not self.unfinished:
@@ -180,7 +180,9 @@ class HTMLParser:
 
 
 def print_tree(
-    node: Node, prefix_parts: list[str] | None = None, is_last_sibling: bool = True
+    node: HTMLElement,
+    prefix_parts: list[str] | None = None,
+    is_last_sibling: bool = True,
 ):
     """Recursively prints the tree structure of the node and its children. Like
     ```

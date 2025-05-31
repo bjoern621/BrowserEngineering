@@ -1,13 +1,13 @@
-from nodes.node import Node
+from nodes.html_element import HTMLElement
 
 
-class Text(Node):
+class Text(HTMLElement):
     """
     A class to represent text content.
     It is used to handle the text content of a web page, that is "a run of characters outside a tag".
     """
 
-    def __init__(self, text: str, parent: Node):
+    def __init__(self, text: str, parent: HTMLElement):
         super().__init__(parent)
         self.text = text
 

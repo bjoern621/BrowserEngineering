@@ -1,7 +1,7 @@
 from typing import Union
 
 from draw_commands.DrawInstruction import DrawInstruction
-from nodes.node import Node
+from nodes.html_element import HTMLElement
 
 
 class LayoutElement:
@@ -11,7 +11,7 @@ class LayoutElement:
 
     def __init__(
         self,
-        node: Node,
+        node: HTMLElement,
         parent: Union["LayoutElement", None],
         previous_sibling: Union["LayoutElement", None],
     ):
@@ -27,7 +27,7 @@ class LayoutElement:
 
     def layout(self) -> None:
         """
-        Layout this element. This method creates the child layout elements and recursively calls their layout method.
+        Layout this element. This method creates the child layout elements and recursively calls their layout method. It also sets the x, y, width, and height properties of this element.
         """
 
         raise NotImplementedError("Subclasses must implement this method.")

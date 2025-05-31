@@ -4,6 +4,8 @@ from draw_commands.DrawInstruction import DrawInstruction
 
 
 class DrawText(DrawInstruction):
+    """Draws text on the canvas at a specified position with a given font."""
+
     def __init__(self, text: str, x: float, y: float, font: Font):
         self.text = text
         self.left = x

@@ -3,6 +3,8 @@ from draw_commands.DrawInstruction import DrawInstruction
 
 
 class DrawRect(DrawInstruction):
+    """Draws a colored rectangle on the canvas."""
+
     def __init__(self, x1: float, y1: float, x2: float, y2: float, color: str):
         self.left = x1
         self.top = y1
