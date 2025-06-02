@@ -126,6 +126,9 @@ class BlockLayout(LayoutElement):
 
         previous = None
         for child in self.node.children:
+            if isinstance(child, TAGElement) and child.tag_name == "head":
+                continue
+
             next = BlockLayout(child, self.width, self, previous)
             self.children.append(next)
             previous = next
