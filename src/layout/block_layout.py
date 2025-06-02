@@ -229,3 +229,6 @@ class BlockLayout(LayoutElement):
 
         self.cursor_x = 0
         self.line = []
+
+    def __repr__(self) -> str:
+        return f"BlockLayout[{self.layout_mode()}] ({self.node})"

@@ -76,6 +76,8 @@ class Browser:
         self.document = DocumentLayout(self.root_node, INITIAL_WIDTH)
         self.document.layout()
 
+        print_tree(self.document)
+
         self.display_list: list[DrawInstruction] = []
         paint_tree(self.document, self.display_list)
 

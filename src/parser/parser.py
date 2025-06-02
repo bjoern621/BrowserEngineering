@@ -1,4 +1,5 @@
 from typing import List
+from layout.layout_element import LayoutElement
 from nodes.tag_element import TAGElement
 from nodes.html_element import HTMLElement
 from nodes.text_element import TextElement
@@ -180,7 +181,7 @@ class HTMLParser:
 
 
 def print_tree(
-    node: HTMLElement,
+    node: HTMLElement | LayoutElement,
     prefix_parts: list[str] | None = None,
     is_last_sibling: bool = True,
 ):

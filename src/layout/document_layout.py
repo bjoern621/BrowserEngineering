@@ -27,3 +27,6 @@ class DocumentLayout(LayoutElement):
 
     def paint(self) -> list[DrawInstruction]:
         return []
+
+    def __repr__(self) -> str:
+        return f"DocumentLayout"
