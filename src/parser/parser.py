@@ -1,7 +1,7 @@
 from typing import List
 from nodes.tag_element import TAGElement
 from nodes.html_element import HTMLElement
-from nodes.text import Text
+from nodes.text_element import TextElement
 
 SELF_CLOSING_TAGS = [
     "area",
@@ -76,7 +76,7 @@ class HTMLParser:
         self.implicit_tags(None)
 
         parent = self.unfinished[-1]
-        node = Text(text, parent)
+        node = TextElement(text, parent)
         parent.children.append(node)
 
     def add_tag(self, tag: str):

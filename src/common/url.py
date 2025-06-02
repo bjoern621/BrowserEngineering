@@ -86,3 +86,39 @@ class URL:
         s.close()
 
         return content
+
+    def resolve(self, url: str):
+        """
+        Resolves a URL string relative to the current URL.
+        This method handles various URL formats:
+        - Absolute URLs with protocol (e.g., "http://example.com")
+        - Protocol-relative URLs (scheme-relative) (e.g., "//example.com")
+        - Absolute paths (host-relative) (e.g., "/path")
+        - Relative paths (path-relative) (e.g., "path")
+        Returns:
+            URL: A new URL object with an absolute URL.
+        """
+
+        if "://" in url:
+            # Absolute URL
+            return URL(url)
+
+        if not url.startswith("/"):
+            # Absolute path (host-relative)
+            dir, _ = self.path.rsplit("/", 1)
+
+            while url.startswith("../"):
+                # Go up one directory for each "../"
+                _, url = url.split("/", 1)
+                if "/" in dir:
+                    dir, _ = dir.rsplit("/", 1)
+                url = url[3:]
+
+            url = f"{dir}/{url}"
+
+        if url.startswith("//"):
+            # Protocol-relative URL (scheme-relative)
+            return URL(f"{self.scheme}:{url}")
+        else:
+            # Relative path (path-relative)
+            return URL(f"{self.scheme}://{self.host}:{str(self.port)}{url}")

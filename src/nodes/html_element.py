@@ -9,3 +9,4 @@ class HTMLElement:
     def __init__(self, parent: Union["HTMLElement", None]):
         self.parent = parent
         self.children: List["HTMLElement"] = []
+        self.style: dict[str, str] = {}

@@ -1,7 +1,6 @@
 from tkinter.font import Font
-from typing import List, Tuple, Literal
+from typing import List, Tuple
 
-from common.constants import VSTEP
 from common.font_cache import get_font
 from draw_commands.DrawRect import DrawRect
 from draw_commands.DrawText import DrawText
@@ -9,7 +8,7 @@ from draw_commands.DrawInstruction import DrawInstruction
 from layout.layout_element import LayoutElement
 from nodes.tag_element import TAGElement
 from nodes.html_element import HTMLElement
-from nodes.text import Text
+from nodes.text_element import TextElement
 
 BLOCK_ELEMENTS = [
     "html",
@@ -64,22 +63,23 @@ class BlockLayout(LayoutElement):
     ):
         super().__init__(node, parent, previous_sibling)
 
-        self.display_list: list[tuple[float, float, str, Font]] = (
+        self.display_list: list[tuple[float, float, str, Font, str]] = (
             []
-        )  # A list of tuples containing (x, y, text, font) for painting
+        )  # A list of tuples containing (x, y, text, font, color) for painting
         self.width = width
 
     def paint(self) -> list[DrawInstruction]:
         cmds: list[DrawInstruction] = []
 
-        if isinstance(self.node, TAGElement) and self.node.tag_name == "pre":
+        bgcolor = self.node.style.get("background-color", "transparent")
+        if bgcolor != "transparent":
             x2, y2 = self.x + self.width, self.y + self.height
-            rect = DrawRect(self.x, self.y, x2, y2, "gray")
+            rect = DrawRect(self.x, self.y, x2, y2, bgcolor)
             cmds.append(rect)
 
         if self.layout_mode() == "inline":
-            for x, y, word, font in self.display_list:
-                cmds.append(DrawText(word, x, y, font))
+            for x, y, word, font, color in self.display_list:
+                cmds.append(DrawText(word, x, y, font, color))
 
         return cmds
 
@@ -99,12 +99,10 @@ class BlockLayout(LayoutElement):
             self.layout_intermediate()
         elif mode == "inline":
             self.cursor_x, self.cursor_y = 0, 0
-            self.weight: Literal["normal", "bold"] = "normal"
-            self.style: Literal["roman", "italic"] = "roman"
-            self.size = 14
-            self.underline = False
 
-            self.line: List[Tuple[float, str, Font]] = []
+            self.line: List[Tuple[float, str, Font, str]] = (
+                []
+            )  # List of tuples (x, word, font, color)
 
             self.recursive(self.node)
 
@@ -125,6 +123,7 @@ class BlockLayout(LayoutElement):
         """
         Layout the block element as an intermediate block, which means it contains other block elements.
         """
+
         previous = None
         for child in self.node.children:
             next = BlockLayout(child, self.width, self, previous)
@@ -135,9 +134,9 @@ class BlockLayout(LayoutElement):
         """
         Determine the layout mode of this block.
         Returns "inline" if this is a block layout laying out text inline (i.e., a text node potentially wrapping to multiple lines, <b>, <i>, etc.), or "block" if it is a block layout that contains other block elements (i.e. <p>, <h1>).
-
         """
-        if isinstance(self.node, Text):
+
+        if isinstance(self.node, TextElement):
             return "inline"
         elif any(
             [
@@ -151,67 +150,44 @@ class BlockLayout(LayoutElement):
         else:
             return "block"
 
-    def open_tag(self, tag: str):
-        """Process opening tags relevant for layout."""
-
-        match tag:
-            case "i":
-                self.style = "italic"
-            case "b":
-                self.weight = "bold"
-            case "small":
-                self.size -= 2
-            case "big":
-                self.size += 4
-            case "u":
-                self.underline = True
-            case "br":
-                self.flush()
-            case _:
-                # Skip unknown tags for layout
-                _ = None
-
-    def close_tag(self, tag: str):
-        """Process closing tags relevant for layout."""
-
-        match tag:
-            case "i":
-                self.style = "roman"
-            case "b":
-                self.weight = "normal"
-            case "small":
-                self.size += 2
-            case "big":
-                self.size -= 4
-            case "u":
-                self.underline = False
-            case "p":
-                self.flush()
-                self.cursor_y += VSTEP
-            case _:
-                # Skip unknown tags for layout
-                _ = None
-
     def recursive(self, node: HTMLElement):
         """Recursively processes the (root) node and its children for layout."""
 
-        if isinstance(node, Text):
+        if isinstance(node, TextElement):
             for word in node.text.split():
-                self.word(word)
+                self.word(word, node)
         elif isinstance(node, TAGElement):
-            self.open_tag(node.tag_name)
+            if node.tag_name == "br":
+                self.flush()
+
             for child in node.children:
                 self.recursive(child)
-            self.close_tag(node.tag_name)
 
-    def word(self, word: str):
+    def word(self, word: str, text_node: TextElement):
         """Add a word to the current line, wrapping to the next line if necessary."""
 
+        weight = text_node.style["font-weight"]
+        style = text_node.style["font-style"]
+        if style == "normal":
+            style = "roman"
+        size = int(
+            float(text_node.style["font-size"][:-2]) * 0.75
+        )  # Convert from px to Tk points
+
+        color = text_node.style["color"]
+
+        text_node_parent = text_node.parent
+        assert text_node_parent is not None, "Text node parent is None."
+        underline = text_node_parent.style.get("text-decoration") == "underline"
+
+        assert weight in ["normal", "bold"], f"Invalid font weight: {weight}"
+        assert style in ["roman", "italic"], f"Invalid font style: {style}"
+
         font = get_font(
-            size=self.size,
-            weight=self.weight,
-            slant=self.style,
-            underline=self.underline,
+            size=size,
+            weight=weight,  # type: ignore
+            slant=style,  # type: ignore
+            underline=underline,
         )
 
         w = font.measure(word)
@@ -222,7 +198,7 @@ class BlockLayout(LayoutElement):
         if screen_x_position_after_word > max_width:
             self.flush()
 
-        self.line.append((self.cursor_x, word, font))
+        self.line.append((self.cursor_x, word, font, color))
         self.cursor_x += w + font.measure(" ")
 
     def flush(self):
@@ -236,17 +212,17 @@ class BlockLayout(LayoutElement):
         if not self.line:
             return
 
-        metrics = [font.metrics() for _x, _word, font in self.line]
+        metrics = [font.metrics() for _x, _word, font, _color in self.line]
         max_ascent = max([metric["ascent"] for metric in metrics])
 
         baseline = self.cursor_y + 1.25 * max_ascent
 
-        for rel_x, word, font in self.line:
+        for rel_x, word, font, color in self.line:
             assert self.x is not None, "BlockLayout x coordinate is not set."
             assert self.y is not None, "BlockLayout y coordinate is not set."
             x: float = self.x + rel_x
             y: float = self.y + baseline - font.metrics("ascent")
-            self.display_list.append((x, y, word, font))
+            self.display_list.append((x, y, word, font, color))
 
         max_descent = max([metric["descent"] for metric in metrics])
         self.cursor_y = baseline + 1.25 * max_descent

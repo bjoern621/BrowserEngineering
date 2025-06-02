@@ -1,7 +1,7 @@
 from nodes.html_element import HTMLElement
 
 
-class Text(HTMLElement):
+class TextElement(HTMLElement):
     """
     A class to represent text content.
     It is used to handle the text content of a web page, that is "a run of characters outside a tag".
