@@ -4,7 +4,7 @@ from nodes.html_element import HTMLElement
 class TAGElement(HTMLElement):
     """
     A class representing an HTML tag.
-    A Tag object represents the contens of an HTML tag, which is a run of characters inside a tag.
+    A Tag object represents the contents of an HTML tag, which is a run of characters inside a tag.
     E.g. '!doctpye html', div, p, span, /span, ....
     """
 

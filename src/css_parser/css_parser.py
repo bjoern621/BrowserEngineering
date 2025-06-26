@@ -130,15 +130,17 @@ class CSSParser:
     def selector(self) -> BaseCSSSelector:
         """Parse a CSS selector. The function expects a tag name followed by optional descendant selectors (e.g., `div p`)."""
 
-        out = TagSelector(self.word().casefold())
+        selectors = [TagSelector(self.word().casefold())]
         self.whitespace()
         while self.index < len(self.css) and self.css[self.index] != "{":
             tag = self.word()
-            descendant = TagSelector(tag.casefold())
-            out = DescendantSelector(out, descendant)
+            selectors.append(TagSelector(tag.casefold()))
             self.whitespace()
 
-        return out
+        if len(selectors) == 1:
+            return selectors[0]
+        else:
+            return DescendantSelector(selectors)
 
     def parse_css_file(self) -> list[tuple[BaseCSSSelector, dict[str, str]]]:
         """Parse an entire CSS file and return a list of tuples of selectors and their property-value pairs."""
